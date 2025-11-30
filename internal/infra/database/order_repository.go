@@ -26,11 +26,11 @@ func (r *OrderRepository) Save(order *entity.Order) error {
 	return nil
 }
 
-func (r *OrderRepository) GetTotal() (int, error) {
-	var total int
-	err := r.Db.QueryRow("Select count(*) from orders").Scan(&total)
-	if err != nil {
-		return 0, err
-	}
-	return total, nil
+func (r *OrderRepository) GetAll() ([]entity.Order, error) {
+	// var total int
+	// err := r.Db.QueryRow("Select * from orders").Scan(&total)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	return nil, nil
 }

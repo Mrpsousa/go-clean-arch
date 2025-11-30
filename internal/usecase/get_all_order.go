@@ -30,26 +30,14 @@ func NewGetAlleOrderUseCase(
 	}
 }
 
-func (c *GetAllOrderUseCase) Execute(input OrderInputDTO) (OrderOutputDTO, error) {
-	order := entity.Order{
-		ID:    input.ID,
-		Price: input.Price,
-		Tax:   input.Tax,
-	}
-	order.CalculateFinalPrice()
-	if err := c.OrderRepository.Save(&order); err != nil {
-		return OrderOutputDTO{}, err
+func (c *GetAllOrderUseCase) Execute() ([]entity.Order, error) {
+	orders ,err := c.OrderRepository.GetAll()
+	if err != nil {
+		return nil, err
 	}
 
-	dto := OrderOutputDTO{
-		ID:         order.ID,
-		Price:      order.Price,
-		Tax:        order.Tax,
-		FinalPrice: order.Price + order.Tax,
-	}
-
-	c.OrderGetAll.SetPayload(dto)
+	c.OrderGetAll.SetPayload(orders)
 	c.EventDispatcher.Dispatch(c.OrderGetAll)
 
-	return dto, nil
+	return orders, nil
 }
