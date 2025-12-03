@@ -40,7 +40,7 @@ func main() {
 	// createOrderUseCase := NewCreateOrderUseCase(db, eventDispatcher)
 
 	webserver := webserver.NewWebServer(configs.WebServerPort)
-	// webOrderHandler := NewWebOrderHandler(db, eventDispatcher) // aqui
+	// webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
 	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated)
