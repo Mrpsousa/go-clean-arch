@@ -4,33 +4,36 @@ import (
 	"project/clean-arch/internal/entity"
 	"project/clean-arch/pkg/events"
 )
+type OrderInput struct {
+	ID    string `json:"input"`
+}
 
-type GetAllOrderUseCase struct {
+type GetOneOrderUseCase struct {
 	OrderRepository entity.OrderRepositoryInterface
-	OrderGetAll    events.EventInterface
+	OrderGetOne    events.EventInterface
 	EventDispatcher events.EventDispatcherInterface
 }
 
-func NewGetAllOrderUseCase(
+func NewGetOneOrderUseCase(
 	OrderRepository entity.OrderRepositoryInterface,
 	OrderGetAll events.EventInterface,
 	EventDispatcher events.EventDispatcherInterface,
-) *GetAllOrderUseCase {
-	return &GetAllOrderUseCase{
+) *GetOneOrderUseCase {
+	return &GetOneOrderUseCase{
 		OrderRepository: OrderRepository,
-		OrderGetAll:    OrderGetAll,
+		OrderGetOne:    OrderGetAll,
 		EventDispatcher: EventDispatcher,
 	}
 }
 
-func (c *GetAllOrderUseCase) Execute() ([]entity.Order, error) {
-	orders ,err := c.OrderRepository.GetAll()
+func (c *GetOneOrderUseCase) Execute(id OrderInput) (*entity.Order, error) {
+	order ,err := c.OrderRepository.GetOne(id)
 	if err != nil {
 		return nil, err
 	}
 
-	c.OrderGetAll.SetPayload(orders)
-	c.EventDispatcher.Dispatch(c.OrderGetAll)
+	c.OrderGetOne.SetPayload(order)
+	c.EventDispatcher.Dispatch(c.OrderGetOne)
 
-	return orders, nil
+	return order, nil
 }

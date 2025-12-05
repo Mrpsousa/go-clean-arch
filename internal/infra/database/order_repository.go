@@ -45,3 +45,13 @@ func (r *OrderRepository) GetAll() ([]entity.Order, error) {
 	return orders, nil
 }
 
+func (r *OrderRepository) GetOne(id string) (*entity.Order, error) {
+	order := entity.Order{}
+	err := r.Db.QueryRow("Select * from orders where id = ?", id).Scan(&order.ID, &order.Price, &order.Tax, &order.FinalPrice)
+	if err != nil {
+		return nil, err
+	}
+	
+	return &order, nil
+}
+
