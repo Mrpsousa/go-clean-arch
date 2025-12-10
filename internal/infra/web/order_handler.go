@@ -7,6 +7,8 @@ import (
 	"project/clean-arch/internal/entity"
 	"project/clean-arch/internal/usecase"
 	"project/clean-arch/pkg/events"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type WebOrderHandler struct {
@@ -63,15 +65,15 @@ func (h *WebOrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebOrderHandler) GetOne(w http.ResponseWriter, r *http.Request) {
-	var input usecase.OrderInput
-	
-	err := json.NewDecoder(r.Body).Decode(&input)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	orderID := chi.URLParam(r, "id")
+
+	if orderID == "" {
+		http.Error(w, "missing ID ", http.StatusBadRequest)
 		return
 	}
+
 	getOrder := usecase.NewGetOneOrderUseCase(h.OrderRepository, h.OrderCreatedEvent, h.EventDispatcher)
-	output, err := getOrder.Execute(input)
+	output, err := getOrder.Execute(orderID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

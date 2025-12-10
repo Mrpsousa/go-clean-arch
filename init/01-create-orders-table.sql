@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS orders (
+    id          VARCHAR(255) NOT NULL,
+    price       DOUBLE NOT NULL,
+    tax         DOUBLE NOT NULL,
+    final_price DOUBLE NOT NULL,
+    
+    -- MySQL 5.7: use TIMESTAMP (suporta fração) ou DATETIME sem (6)
+    created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

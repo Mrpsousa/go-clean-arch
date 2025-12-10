@@ -47,7 +47,7 @@ func main() {
 
 	webserver.AddHandler("/order/create", webOrderHandler.Create)
 	webserver.AddHandler("/order/list", webOrderHandler.GetAll)
-	webserver.AddHandler("/order/byId", webOrderHandler.GetOne)
+	webserver.AddHandler("/order/byId/{id}", webOrderHandler.GetOne)
 
 	fmt.Println("Starting web server on port", configs.WebServerPort)
 	webserver.Start()

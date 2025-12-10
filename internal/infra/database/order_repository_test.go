@@ -22,7 +22,20 @@ func init () {
 		panic(err)
 	}
 	
-	globalDB.Exec("CREATE TABLE orders (id varchar(255) NOT NULL, price float NOT NULL, tax float NOT NULL, final_price float NOT NULL, PRIMARY KEY (id))")
+	// globalDB.Exec("CREATE TABLE orders (id varchar(255) NOT NULL, price float NOT NULL, tax float NOT NULL, final_price float NOT NULL, PRIMARY KEY (id))")
+	globalDB.Exec(`
+		CREATE TABLE IF NOT EXISTS orders (
+			id          VARCHAR(255) NOT NULL,
+			price       DOUBLE NOT NULL,
+			tax         DOUBLE NOT NULL,
+			final_price DOUBLE NOT NULL,
+			
+			created_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+			updated_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+			
+			PRIMARY KEY (id)
+		)
+	`)
 }
 
 func TestSaveAndGetOrder(t *testing.T) {
