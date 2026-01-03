@@ -12,6 +12,7 @@ import (
 	"project/clean-arch/internal/entity"
 	"project/clean-arch/internal/event"
 	"project/clean-arch/internal/infra/database"
+	rbmq "project/clean-arch/internal/infra/rabbitmq"
 	"project/clean-arch/internal/infra/web"
 	"project/clean-arch/internal/usecase"
 	"project/clean-arch/pkg/events"
@@ -31,7 +32,9 @@ func NewCreateOrderUseCase(db *sql.DB, eventDispatcher events.EventDispatcherInt
 func NewWebOrderHandler(db *sql.DB, eventDispatcher events.EventDispatcherInterface) *web.WebOrderHandler {
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
-	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated)
+	rabbit := &rbmq.QueueInfo{}	
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbit)
+	
 	return webOrderHandler
 }
 

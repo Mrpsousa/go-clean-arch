@@ -8,6 +8,7 @@ import (
 	"project/clean-arch/internal/event"
 	"project/clean-arch/internal/event/handler"
 	"project/clean-arch/internal/infra/database"
+	rbmq "project/clean-arch/internal/infra/rabbitmq"
 	"project/clean-arch/internal/infra/web"
 	"project/clean-arch/internal/infra/web/webserver"
 	"project/clean-arch/pkg/events"
@@ -43,11 +44,14 @@ func main() {
 	// webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
-	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated)
+	rabbit := &rbmq.QueueInfo{}
+	
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbit)
 
 	webserver.AddHandler("/order/create", webOrderHandler.Create)
 	webserver.AddHandler("/order/list", webOrderHandler.GetAll)
 	webserver.AddHandler("/order/byId/{id}", webOrderHandler.GetOne)
+	webserver.AddHandler("/msgs", webOrderHandler.GetNumbMsgInQueue)
 
 	fmt.Println("Starting web server on port", configs.WebServerPort)
 	webserver.Start()

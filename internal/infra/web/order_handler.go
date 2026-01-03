@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"project/clean-arch/internal/entity"
+	rbmq "project/clean-arch/internal/infra/rabbitmq"
 	"project/clean-arch/internal/usecase"
 	"project/clean-arch/pkg/events"
 
@@ -15,17 +16,20 @@ type WebOrderHandler struct {
 	EventDispatcher   events.EventDispatcherInterface
 	OrderRepository   entity.OrderRepositoryInterface
 	OrderCreatedEvent events.EventInterface
+	Rabbit *rbmq.QueueInfo
 }
 
 func NewWebOrderHandler(
 	EventDispatcher events.EventDispatcherInterface,
 	OrderRepository entity.OrderRepositoryInterface,
 	OrderCreatedEvent events.EventInterface,
+	Rabbit *rbmq.QueueInfo,
 ) *WebOrderHandler {
 	return &WebOrderHandler{
 		EventDispatcher:   EventDispatcher,
 		OrderRepository:   OrderRepository,
 		OrderCreatedEvent: OrderCreatedEvent,
+		Rabbit:            Rabbit,
 	}
 }
 
@@ -74,6 +78,22 @@ func (h *WebOrderHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	getOrder := usecase.NewGetOneOrderUseCase(h.OrderRepository, h.OrderCreatedEvent, h.EventDispatcher)
 	output, err := getOrder.Execute(orderID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(output)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+
+func (h *WebOrderHandler) GetNumbMsgInQueue(w http.ResponseWriter, r *http.Request) {
+
+	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.Rabbit)
+	output, err := getNumbMsgs.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
