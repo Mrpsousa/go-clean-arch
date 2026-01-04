@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -15,6 +16,13 @@ const (
 	routingKey  = "exame_imagem"
 	intervalSec = 60
 )
+
+type RabbitMsg struct {
+	CreatedAt    time.Time
+	ExameName    string
+	PacienteName string
+	DocImagePath string
+}
 
 func main() {
 	// Conexão ao RabbitMQ com reconexão automática
@@ -55,7 +63,16 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			message := fmt.Sprintf("Mensagem de exame_imagem #%d enviada em %s", count, time.Now().Format(time.RFC3339))
+			rabbitMsg := RabbitMsg{
+				CreatedAt:    time.Now(),
+				ExameName:    "Image Exame",
+				PacienteName: "Pacient Test",
+				DocImagePath: "/path/to/image.jpg",
+			}
+			bytesMsg, err := json.Marshal(rabbitMsg)
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = ch.Publish(
 				exchange,   // exchange
 				routingKey, // routing key
@@ -63,7 +80,7 @@ func main() {
 				false,      // immediate
 				amqp.Publishing{
 					ContentType: "text/plain",
-					Body:        []byte(message),
+					Body:        []byte(bytesMsg),
 				},
 			)
 			if err != nil {
@@ -76,7 +93,7 @@ func main() {
 				}
 				ch, _ = conn.Channel()
 			} else {
-				log.Printf("Mensagem enviada: %s", message)
+				log.Printf("Mensagem enviada")
 				count++
 			}
 		}

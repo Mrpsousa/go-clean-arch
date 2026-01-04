@@ -16,20 +16,23 @@ type WebOrderHandler struct {
 	EventDispatcher   events.EventDispatcherInterface
 	OrderRepository   entity.OrderRepositoryInterface
 	OrderCreatedEvent events.EventInterface
-	Rabbit *rbmq.QueueInfo
+	RabbitInfo *rbmq.QueueInfo
+	RabbitMq 	 *rbmq.RabbitMq
 }
 
 func NewWebOrderHandler(
 	EventDispatcher events.EventDispatcherInterface,
 	OrderRepository entity.OrderRepositoryInterface,
 	OrderCreatedEvent events.EventInterface,
-	Rabbit *rbmq.QueueInfo,
+	RabbitInfo *rbmq.QueueInfo,
+	RabbitMq 	 *rbmq.RabbitMq,
 ) *WebOrderHandler {
 	return &WebOrderHandler{
 		EventDispatcher:   EventDispatcher,
 		OrderRepository:   OrderRepository,
 		OrderCreatedEvent: OrderCreatedEvent,
-		Rabbit:            Rabbit,
+		RabbitInfo:            RabbitInfo,
+		RabbitMq: RabbitMq,
 	}
 }
 
@@ -89,11 +92,23 @@ func (h *WebOrderHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func (h *WebOrderHandler) GetNumbMsgInQueue(w http.ResponseWriter, r *http.Request) {
-
-	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.Rabbit)
+	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.RabbitInfo)
 	output, err := getNumbMsgs.Execute()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(output)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *WebOrderHandler) GetRabbitMqMsg(w http.ResponseWriter, r *http.Request) {
+	getNumbMsgs := usecase.NewGetRabbitMsgUseCase(h.RabbitMq)
+	output, err := getNumbMsgs.Execute("exame_imagem", "test-queue", "general_channel")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

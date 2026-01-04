@@ -44,14 +44,20 @@ func main() {
 	// webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
-	rabbit := &rbmq.QueueInfo{}
-	
-	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbit)
+	rabbitInfo := &rbmq.QueueInfo{}
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		panic(err)
+	}
+	rabbitMq := rbmq.NewRabbitMq(conn)
+
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbitInfo, rabbitMq)
 
 	webserver.AddHandler("/order/create", webOrderHandler.Create)
 	webserver.AddHandler("/order/list", webOrderHandler.GetAll)
 	webserver.AddHandler("/order/byId/{id}", webOrderHandler.GetOne)
 	webserver.AddHandler("/msgs", webOrderHandler.GetNumbMsgInQueue)
+	webserver.AddHandler("/get/msg", webOrderHandler.GetRabbitMqMsg)
 
 	fmt.Println("Starting web server on port", configs.WebServerPort)
 	webserver.Start()

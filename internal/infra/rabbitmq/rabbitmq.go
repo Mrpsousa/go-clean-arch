@@ -4,15 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/streadway/amqp"
 )
 
 type QueueInfo struct {}
 
 type QueueData struct {
-	Name     string `json:"name"`
-	Messages int    `json:"messages"` 
 	Ready    int    `json:"messages_ready"` 
-	Unacked  int    `json:"messages_unacknowledged"`
+}
+
+type RabbitMq struct {
+	Conn *amqp.Connection
+}
+
+type RabbitMsg struct {
+	CreatedAt    time.Time
+	ExameName    string
+	PacienteName string
+	DocImagePath string
 }
 
 func(q *QueueInfo) getQueueMessages(queueName string) (int, error) {
@@ -47,4 +58,67 @@ func(q *QueueInfo) Run() (int, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+
+func NewRabbitMq(conn *amqp.Connection) *RabbitMq {
+	return &RabbitMq{Conn: conn}
+}
+
+func (r *RabbitMq) Receiver(routingKey, queueName, exchangeName string) (*RabbitMsg, error) {
+	rabbitMsg := &RabbitMsg{}
+
+	defer r.Conn.Close()
+
+	ch, err := r.Conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+	defer ch.Close()
+
+	// Declara a exchange
+	err = ch.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Declara a fila
+	q, err := ch.QueueDeclare(queueName, true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Faz o bind da fila na exchange com a routing key "X"
+	err = ch.QueueBind(q.Name, routingKey, exchangeName, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Configura QoS para consumir 1 mensagem por vez
+	err = ch.Qos(1, 0, false)
+	if err != nil {
+		return nil, err
+	}
+
+	// Consome (autoAck = false para confirmar manualmente)
+	msgs, err := ch.Consume(q.Name, "", false, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Recebe APENAS UMA mensagem
+	msg, ok := <-msgs
+	if !ok {
+		return nil, fmt.Errorf("some queue error, can't receive message 'no ok'")	
+	}
+
+	err = json.Unmarshal(msg.Body, rabbitMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Confirma o recebimento (ack)
+	msg.Ack(false)
+	
+	return rabbitMsg, nil
 }

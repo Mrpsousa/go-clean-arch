@@ -18,6 +18,7 @@ import (
 	"project/clean-arch/pkg/events"
 
 	"github.com/google/wire"
+	"github.com/streadway/amqp"
 )
 
 // Injectors from wire.go:
@@ -32,8 +33,14 @@ func NewCreateOrderUseCase(db *sql.DB, eventDispatcher events.EventDispatcherInt
 func NewWebOrderHandler(db *sql.DB, eventDispatcher events.EventDispatcherInterface) *web.WebOrderHandler {
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
-	rabbit := &rbmq.QueueInfo{}	
-	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbit)
+	rabbitInfo := &rbmq.QueueInfo{}	
+		conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		panic(err)
+	}
+	rabbitMq := rbmq.NewRabbitMq(conn)
+
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbitInfo, rabbitMq)
 	
 	return webOrderHandler
 }
