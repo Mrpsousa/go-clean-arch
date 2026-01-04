@@ -44,14 +44,14 @@ func main() {
 	// webOrderHandler := NewWebOrderHandler(db, eventDispatcher)
 	orderRepository := database.NewOrderRepository(db)
 	orderCreated := event.NewOrderCreated()
-	rabbitInfo := &rbmq.QueueInfo{}
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	if err != nil {
 		panic(err)
 	}
 	rabbitMq := rbmq.NewRabbitMq(conn)
+	defer rabbitMq.Close()
 
-	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbitInfo, rabbitMq)
+	webOrderHandler := web.NewWebOrderHandler(eventDispatcher, orderRepository, orderCreated, rabbitMq)
 
 	webserver.AddHandler("/order/create", webOrderHandler.Create)
 	webserver.AddHandler("/order/list", webOrderHandler.GetAll)

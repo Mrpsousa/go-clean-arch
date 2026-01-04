@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/99designs/gqlgen v0.17.22
 	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/cors v1.2.2
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/wire v0.5.0
 	github.com/mattn/go-sqlite3 v1.14.16

@@ -6,3 +6,4 @@
 	Ready    int    `json:"messages_ready"` 
 	Unacked  int    `json:"messages_unacknowledged"`
 }
+2 - rabbitmq need to be a different module

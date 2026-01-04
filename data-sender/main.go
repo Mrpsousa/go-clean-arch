@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"data-sender/internal/entity"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -16,13 +18,6 @@ const (
 	routingKey  = "exame_imagem"
 	intervalSec = 60
 )
-
-type RabbitMsg struct {
-	CreatedAt    time.Time
-	ExameName    string
-	PacienteName string
-	DocImagePath string
-}
 
 func main() {
 	// Conexão ao RabbitMQ com reconexão automática
@@ -62,12 +57,13 @@ func main() {
 	count := 1
 	for {
 		select {
-		case <-ticker.C:
-			rabbitMsg := RabbitMsg{
+			case <-ticker.C:
+				rabbitMsg := entity.RabbitMsg{
 				CreatedAt:    time.Now(),
 				ExameName:    "Image Exame",
-				PacienteName: "Pacient Test",
+				PacientName: "Pacient Test",
 				DocImagePath: "/path/to/image.jpg",
+				PacientNumbPhone: "123456789",
 			}
 			bytesMsg, err := json.Marshal(rabbitMsg)
 			if err != nil {

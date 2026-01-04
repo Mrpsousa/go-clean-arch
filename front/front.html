@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor de Exames</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .counter {
+      font-size: 28px;
+      text-align: center;
+      padding: 20px;
+      background-color: #3498db;
+      color: white;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    button {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto;
+    }
+    button:hover {
+      background-color: #219a52;
+    }
+    .exam-details {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    .exam-details img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #ddd;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Monitor de Exames Pendentes</h1>
+
+  <div class="counter" id="exam-count">
+    Carregando número de exames...
+  </div>
+
+  <button onclick="fetchNextExam()">Buscar Próximo Exame</button>
+
+  <div class="exam-details" id="exam-details" style="display: none;">
+    <h2>Dados do Exame</h2>
+    <p><strong>Paciente:</strong> <span id="patient-name"></span></p>
+    <p><strong>Exame:</strong> <span id="exam-name"></span></p>
+    <p><strong>Telefone:</strong> <span id="patient-phone"></span></p>
+    <p><strong>Data de Criação:</strong> <span id="created-at"></span></p>
+    <div id="image-container"></div>
+  </div>
+
+  <script>
+    const countElement = document.getElementById('exam-count');
+    const detailsDiv = document.getElementById('exam-details');
+    const patientName = document.getElementById('patient-name');
+    const examName = document.getElementById('exam-name');
+    const patientPhone = document.getElementById('patient-phone');
+    const createdAt = document.getElementById('created-at');
+    const imageContainer = document.getElementById('image-container');
+
+    // Atualiza o contador a cada 50 segundos
+    async function updateExamCount() {
+      try {
+        const response = await fetch('http://localhost:8000/msgs');
+        if (!response.ok) throw new Error('Erro na resposta');
+        const count = await response.text(); // assume que retorna apenas o número
+        countElement.textContent = `Número de exames pra agendar: ${count}`;
+      } catch (error) {
+        countElement.textContent = 'Erro ao carregar contador';
+        console.error(error);
+      }
+    }
+
+    // Busca o próximo exame ao clicar no botão
+    async function fetchNextExam() {
+      try {
+        const response = await fetch('http://localhost:8000/get/msg');
+        if (!response.ok) throw new Error('Nenhum exame disponível ou erro');
+
+        const data = await response.json();
+
+        // Preenche os dados
+        patientName.textContent = data.PacientName;
+        examName.textContent = data.ExameName;
+        patientPhone.textContent = data.PacientNumbPhone;
+        createdAt.textContent = new Date(data.CreatedAt).toLocaleString('pt-BR');
+
+        // Limpa imagem anterior
+        imageContainer.innerHTML = '';
+
+        // Se houver caminho da imagem, tenta exibir (ajuste o host se necessário)
+        if (data.DocImagePath) {
+          const img = document.createElement('img');
+          // Ajuste o URL se o backend não servir a imagem diretamente
+          img.src = `http://localhost:8000${data.DocImagePath}`;
+          img.alt = "Imagem do documento";
+          img.onerror = () => {
+            imageContainer.innerHTML = '<p>Imagem não disponível</p>';
+          };
+          imageContainer.appendChild(img);
+        }
+
+        detailsDiv.style.display = 'block';
+      } catch (error) {
+        detailsDiv.style.display = 'block';
+        detailsDiv.innerHTML = '<p class="error">Nenhum exame disponível no momento ou erro na conexão.</p>';
+        console.error(error);
+      }
+    }
+
+    // Atualiza contador 
+    updateExamCount();
+    setInterval(updateExamCount, 70000);
+  </script>
+</body>
+</html>

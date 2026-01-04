@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"project/clean-arch/internal/entity"
 	rbmq "project/clean-arch/internal/infra/rabbitmq"
 )
 
@@ -14,7 +15,7 @@ func NewGetRabbitMsgUseCase(rabbit *rbmq.RabbitMq) *GetRabbitMsgUseCase {
 	}
 }
 
-func (c *GetRabbitMsgUseCase) Execute(routingKey, queueName, exchange string) (*rbmq.RabbitMsg, error) {
+func (c *GetRabbitMsgUseCase) Execute(routingKey, queueName, exchange string) (*entity.RabbitMsg, error) {
 	msg, err := c.RabbitMq.Receiver(routingKey, queueName, exchange)
 	if err != nil {
 		return nil, err

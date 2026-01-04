@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+
+	"project/clean-arch/internal/entity"
 
 	"github.com/streadway/amqp"
 )
-
-type QueueInfo struct {}
 
 type QueueData struct {
 	Ready    int    `json:"messages_ready"` 
@@ -19,14 +18,24 @@ type RabbitMq struct {
 	Conn *amqp.Connection
 }
 
-type RabbitMsg struct {
-	CreatedAt    time.Time
-	ExameName    string
-	PacienteName string
-	DocImagePath string
-}
+func(r *RabbitMq) getQueueMessages(queueName, routingKey, exchangeName string) (int, error) {
+	ch, err := r.Conn.Channel()
+	if err != nil {
+		return 0, err
+	}
+	defer ch.Close()
+	// Declara a fila
+	q, err := ch.QueueDeclare(queueName, true, false, false, false, nil)
+	if err != nil {
+		return 0, err
+	}
 
-func(q *QueueInfo) getQueueMessages(queueName string) (int, error) {
+	// Faz o bind da fila na exchange com a routing key "X"
+	err = ch.QueueBind(q.Name, routingKey, exchangeName, false, nil)
+	if err != nil {
+		return 0, err
+	}
+
 	url := fmt.Sprintf("http://localhost:15672/api/queues/%%2F/%s", queueName)
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -51,8 +60,8 @@ func(q *QueueInfo) getQueueMessages(queueName string) (int, error) {
 	return queueData.Ready, nil 
 }
 
-func(q *QueueInfo) Run() (int, error) {
-	count, err := q.getQueueMessages("imagem-queue")
+func(q *RabbitMq) Run() (int, error) {
+	count, err := q.getQueueMessages("test-queue", "exame_imagem", "general_channel")
 	if err != nil {
 		fmt.Println("Erro:", err)
 		return 0, err
@@ -65,10 +74,12 @@ func NewRabbitMq(conn *amqp.Connection) *RabbitMq {
 	return &RabbitMq{Conn: conn}
 }
 
-func (r *RabbitMq) Receiver(routingKey, queueName, exchangeName string) (*RabbitMsg, error) {
-	rabbitMsg := &RabbitMsg{}
+func (r *RabbitMq) Close() {
+	r.Conn.Close()
+}
 
-	defer r.Conn.Close()
+func (r *RabbitMq) Receiver(routingKey, queueName, exchangeName string) (*entity.RabbitMsg, error) {
+	rabbitMsg := &entity.RabbitMsg{}
 
 	ch, err := r.Conn.Channel()
 	if err != nil {
@@ -77,7 +88,7 @@ func (r *RabbitMq) Receiver(routingKey, queueName, exchangeName string) (*Rabbit
 	defer ch.Close()
 
 	// Declara a exchange
-	err = ch.ExchangeDeclare(exchangeName, "direct", true, false, false, false, nil)
+	err = ch.ExchangeDeclare(exchangeName, "topic", true, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,6 @@ type WebOrderHandler struct {
 	EventDispatcher   events.EventDispatcherInterface
 	OrderRepository   entity.OrderRepositoryInterface
 	OrderCreatedEvent events.EventInterface
-	RabbitInfo *rbmq.QueueInfo
 	RabbitMq 	 *rbmq.RabbitMq
 }
 
@@ -24,14 +23,12 @@ func NewWebOrderHandler(
 	EventDispatcher events.EventDispatcherInterface,
 	OrderRepository entity.OrderRepositoryInterface,
 	OrderCreatedEvent events.EventInterface,
-	RabbitInfo *rbmq.QueueInfo,
 	RabbitMq 	 *rbmq.RabbitMq,
 ) *WebOrderHandler {
 	return &WebOrderHandler{
 		EventDispatcher:   EventDispatcher,
 		OrderRepository:   OrderRepository,
 		OrderCreatedEvent: OrderCreatedEvent,
-		RabbitInfo:            RabbitInfo,
 		RabbitMq: RabbitMq,
 	}
 }
@@ -93,7 +90,7 @@ func (h *WebOrderHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebOrderHandler) GetNumbMsgInQueue(w http.ResponseWriter, r *http.Request) {
-	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.RabbitInfo)
+	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.RabbitMq)
 	output, err := getNumbMsgs.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

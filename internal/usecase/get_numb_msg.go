@@ -5,10 +5,10 @@ import (
 )
 
 type GetNumbMsgInQueueUseCase struct {
-	Rabbit *rbmq.QueueInfo
+	Rabbit *rbmq.RabbitMq
 }
 
-func NewNumbMsgInQueueUseCase(rabbit *rbmq.QueueInfo) *GetNumbMsgInQueueUseCase {
+func NewNumbMsgInQueueUseCase(rabbit *rbmq.RabbitMq) *GetNumbMsgInQueueUseCase {
 	return &GetNumbMsgInQueueUseCase{
 		Rabbit: rabbit,
 	}
