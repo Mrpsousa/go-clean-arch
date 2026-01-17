@@ -129,7 +129,7 @@ func (r *RabbitMq) Receiver(routingKey, queueName, exchangeName string) (*entity
 	}
 
 	// Confirma o recebimento (ack)
-	msg.Ack(false)
+	msg.Ack(true)
 	
 	return rabbitMsg, nil
 }

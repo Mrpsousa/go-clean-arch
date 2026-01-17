@@ -90,8 +90,8 @@ func (h *WebOrderHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebOrderHandler) GetNumbMsgInQueue(w http.ResponseWriter, r *http.Request) {
-	getNumbMsgs := usecase.NewNumbMsgInQueueUseCase(h.RabbitMq)
-	output, err := getNumbMsgs.Execute()
+	getNumbMsgsCase := usecase.NewNumbMsgInQueueUseCase(h.RabbitMq)
+	output, err := getNumbMsgsCase.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,8 +104,8 @@ func (h *WebOrderHandler) GetNumbMsgInQueue(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *WebOrderHandler) GetRabbitMqMsg(w http.ResponseWriter, r *http.Request) {
-	getNumbMsgs := usecase.NewGetRabbitMsgUseCase(h.RabbitMq)
-	output, err := getNumbMsgs.Execute("exame_imagem", "test-queue", "general_channel")
+	getNumbMsgsCase := usecase.NewGetRabbitMsgUseCase(h.RabbitMq)
+	output, err := getNumbMsgsCase.Execute("exame_imagem", "test-queue", "general_channel")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
